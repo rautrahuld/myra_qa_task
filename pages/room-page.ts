@@ -35,12 +35,12 @@ export class RoomPage {
     }
 
     /**
-     * Returns a locator for a facility checkbox element based on the facility name.
-     * @param {string} facility The name of the facility (e.g., "WiFi")
-     * @returns {Locator} Locator for the facility checkbox element
+     * Returns a locator for a feature checkbox element based on the feature name.
+     * @param {string} feature The name of the feature (e.g., "WiFi")
+     * @returns {Locator} Locator for the feature checkbox element
      */
-    facilityLocator(facility: string) {
-        return this.page.locator(`input[name="featureCheck"][value="${facility}"]`);
+    featureLocator(feature: string) {
+        return this.page.locator(`input[name="featureCheck"][value="${feature}"]`);
     }
 
     /**
@@ -90,15 +90,15 @@ export class RoomPage {
          * Selects the given features from the available options.
          * @param {string[]} features An array of feature names to select for room
          */
-        for (const facility of features) {
-            const facilityElement = this.facilityLocator(facility);
-            if (await facilityElement.count() > 0) {
-                const isChecked = await facilityElement.isChecked();
+        for (const feature of features) {
+            const featureElement = this.featureLocator(feature);
+            if (await featureElement.count() > 0) {
+                const isChecked = await featureElement.isChecked();
                 if (!isChecked) {
-                    await facilityElement.check();
+                    await featureElement.check();
                 }
             } else {
-                console.warn(`Facility '${facility}' not found.`);
+                console.warn(`Feature '${feature}' not found.`);
             }
         }
     }
