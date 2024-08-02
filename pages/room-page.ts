@@ -8,6 +8,8 @@ export class RoomPage {
     readonly type: Locator;
     readonly accessible: Locator;
     readonly roomPrice: Locator;
+    readonly description: Locator;
+    readonly image: Locator;
     readonly roomHeadingLocator: Locator;
     readonly roomListingLocator: Locator;
 
@@ -16,7 +18,7 @@ export class RoomPage {
     readonly editButton: Locator;
     readonly updateButton: Locator;
 
-    constructor (page: Page) {
+    constructor(page: Page) {
         this.page = page;
         this.roomsLink = page.getByRole('link', { name: 'Rooms' });
         this.navigationItems = page.getByRole('navigation');
@@ -24,6 +26,8 @@ export class RoomPage {
         this.type = page.locator('#type');
         this.accessible = page.locator('#accessible');
         this.roomPrice = page.locator('#roomPrice');
+        this.description = page.locator('#description');
+        this.image = page.locator('#image');
         this.roomHeadingLocator = page.getByRole('heading');
         this.roomListingLocator = page.getByTestId('roomlisting');
 
@@ -31,7 +35,6 @@ export class RoomPage {
         this.createButton = page.getByRole('button', { name: 'Create' });
         this.editButton = page.getByRole('button', { name: 'Edit' });
         this.updateButton = page.getByRole('button', { name: 'Update' });
-        
     }
 
     /**
@@ -39,7 +42,7 @@ export class RoomPage {
      * @param {string} feature The name of the feature (e.g., "WiFi")
      * @returns {Locator} Locator for the feature checkbox element
      */
-    featureLocator(feature: string) {
+    featureLocator(feature: string): Locator {
         return this.page.locator(`input[name="featureCheck"][value="${feature}"]`);
     }
 
@@ -48,7 +51,7 @@ export class RoomPage {
      * @param {string} roomId The ID of the room
      * @returns {Locator} Locator for the room listing element
      */
-    roomLocatorById(roomId: string) {
+    roomLocatorById(roomId: string): Locator {
         return this.roomListingLocator.locator('div').filter({ hasText: roomId });
     }
 
@@ -57,9 +60,9 @@ export class RoomPage {
      * @param {string} roomId The ID of the room
      * @returns {Locator} Locator for the delete button element
      */
-    deleteButtonLocator(roomId: string) {
+    deleteButtonLocator(roomId: string): Locator {
         return this.roomLocatorById(roomId)
-        .locator(`//../following-sibling::div/span[contains(@class, 'roomDelete')]`);
+            .locator(`//../following-sibling::div/span[contains(@class, 'roomDelete')]`);
     }
 
     /**
@@ -68,22 +71,19 @@ export class RoomPage {
      * @param {string} value The value to search for (e.g., room type, price)
      * @returns {Locator} Locator for the element containing the value
      */
-    getRoomValueLocator(roomId: string, value: string) {
+    getRoomValueLocator(roomId: string, value: string): Locator {
         return this.roomLocatorById(roomId)
-        .locator(`//../following-sibling::div/p[contains(text(), "${value}")]`);
+            .locator(`//../following-sibling::div/p[normalize-space()="${value}"]`);
     }
 
     /**
-     * Returns a locator for elements containing features within a room listing.
-     * @param {string} roomId The ID of the room
-     * @param {string} value Feature identifier (e.g., ID of the features element)
-     * @returns {Locator} Locator for the element containing features
+     * Returns a locator for an element containing the specified value for the updated room.
+     * @param {string} value The value to search for (e.g., room type, price)
+     * @returns {Locator} Locator for the element containing the value
      */
-    getRoomFeaturesLocator(roomId: string, value: string) {
-        return this.roomLocatorById(roomId)
-        .locator(`//../following-sibling::div/p[contains(@id, "${value}")]`);
+    getRoomUpdatedValueLocator(value: string): Locator {
+        return this.page.locator(`//div[@id='root']//following::*[normalize-space()="${value}"]`);
     }
-
 
     async selectFeatures(features: string[]) {
         /**
@@ -133,10 +133,12 @@ export class RoomPage {
         await this.editButton.click();
         await expect(this.updateButton).toBeVisible();
         await this.roomName.fill(updateRoomData.id);
+        await this.description.fill(updateRoomData.description);
         await this.type.selectOption(updateRoomData.type);
         await this.accessible.selectOption(updateRoomData.accessible);
         await this.roomPrice.fill(updateRoomData.price);
         await this.selectFeatures(updateRoomData.features);
+        await this.image.fill(updateRoomData.image);
         await this.updateButton.click();
         await expect(this.editButton).toBeVisible();
     }
@@ -159,7 +161,7 @@ export class RoomPage {
         await expect(this.getRoomValueLocator(roomData.id, roomData.type)).toBeVisible();
         await expect(this.getRoomValueLocator(roomData.id, roomData.accessible)).toBeVisible();
         await expect(this.getRoomValueLocator(roomData.id, roomData.price)).toBeVisible();
-        await expect(this.getRoomFeaturesLocator(roomData.id, roomData.features.join(','))).toBeVisible();
+        await expect(this.getRoomValueLocator(roomData.id, roomData.features.join(', '))).toBeVisible();
     }
 
     async verifyRoomIsUpdated(roomData: any) {
@@ -168,6 +170,12 @@ export class RoomPage {
          * @param {object} roomData Updated room details (same structure as roomData in createRoom)
          */
         await expect(this.roomHeadingLocator).toContainText(roomData.id);
+        await expect(this.getRoomUpdatedValueLocator(roomData.description)).toBeVisible();
+        await expect(this.getRoomUpdatedValueLocator(roomData.type)).toBeVisible();
+        await expect(this.getRoomUpdatedValueLocator(roomData.accessible)).toBeVisible();
+        await expect(this.getRoomUpdatedValueLocator(roomData.features.join(', '))).toBeVisible();
+        await expect(this.getRoomUpdatedValueLocator(roomData.price)).toBeVisible();
+
         await this.roomsLink.click();
         await this.verifyRoomIsListed(roomData);
     }

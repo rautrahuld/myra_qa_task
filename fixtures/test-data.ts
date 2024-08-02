@@ -24,7 +24,8 @@ const testData = {
                 accessible: "false",
                 price: "200",
                 features: ["WiFi", "TV", "Refreshments", "Safe"],
-                description: "An updated Double room with additional amenities."
+                description: "An updated Double room with additional amenities.",
+                image: "/images/room2.jpg"
             }
         },
         delete: {
